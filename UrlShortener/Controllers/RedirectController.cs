@@ -12,9 +12,9 @@ public class RedirectController : ControllerBase
     }
 
     [HttpGet("{alias}", Name = "Redirect")]
-    public IResult Get(string alias)
+    public IActionResult Get(string alias)
     {
-        return Results.Redirect("https://www.google.com/" + alias);
+        return Redirect("https://www.google.com" + alias);
     }
 
 }

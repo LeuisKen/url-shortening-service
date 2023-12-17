@@ -48,11 +48,11 @@ Response:
 }
 ```
 
-`409 Conflict`: The custom alias conflict with existing short links.
+`400 Bad Request`: The custom alias conflict with existing short links.
 
 ```json
 {
-    "status": 409,
+    "status": 400,
     "msg": "The custom alias conflict with existing short links.",
 }
 ```
@@ -86,8 +86,7 @@ Use dynamodb as the database since there is actually no relationship between dat
 
 | Field | Type | Description |
 | --- | --- | --- |
-| id | string | The unique id of the url. |
-| originalUrl | string | The original url. |
 | alias | string | The alias of the url. |
+| originalUrl | string | The original url. |
 | createTime | number | The create time of the url. |
 | expireDate | number | The expire date of the url. |
