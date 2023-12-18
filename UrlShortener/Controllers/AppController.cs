@@ -43,7 +43,10 @@ public class AppController : ControllerBase
             var existingUrl = await _context.LoadAsync<Url>(urlDTO.CustomAlias);
             if (existingUrl != null)
             {
-                return BadRequest("The custom alias conflict with existing short links.");
+                return BadRequest(new {
+                    status = 400,
+                    msg = "The custom alias conflict with existing short links."
+                });
             }
         }
         else {
@@ -57,7 +60,12 @@ public class AppController : ControllerBase
             var expireDate = DateTime.Parse(urlDTO.ExpireDate!);
             if (expireDate < DateTime.Now)
             {
-                return BadRequest("The expire date must be in the future.");
+                return BadRequest(
+                    new {
+                        status = 400,
+                        msg = "The expire date must be greater than current date."
+                    }
+                );
             }
         }
         else {
@@ -74,6 +82,12 @@ public class AppController : ControllerBase
 
         await _context.SaveAsync(todoItem);
 
-        return Ok(todoItem);
+        return Ok(new {
+            status = 0,
+            msg = "",
+            data = new {
+                url = $"{Request.Scheme}://{Request.Host}/{todoItem.Alias}"
+            }
+        });
     }
 }
