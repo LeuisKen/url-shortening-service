@@ -9,15 +9,26 @@ namespace UrlShortener.Controllers;
 [Route("app/api", Name = "UrlShortenerManagement")]
 public class AppController(
     IDynamoDBContext dbContext,
+    IConfiguration configuration,
     ILogger<AppController> logger
 ) : ControllerBase
 {
+
+    // default values
+    private const int DEFAULT_NANOID_SIZE = 6;
+    private const string DEFAULT_NANOID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv";
+    private const int CUSTOM_ALIAS_LENGTH_MIN = 4;
+    private const int URL_EXPIRE_DATE_MAX_BY_SECONDS = 157680000;
+
     private readonly IDynamoDBContext _dbContext = dbContext;
+    private readonly IConfigurationSection _configurationSection = configuration.GetSection("AppConfig");
     private readonly ILogger<AppController> _logger = logger;
 
     private async Task<string> GenerateAlias()
     {
-        string aliasTrial = Nanoid.Generate(size: 6, alphabet: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+        int nanoidSize = _configurationSection.GetValue("NanoidSize", DEFAULT_NANOID_SIZE);
+        string nanoidAlphabet = _configurationSection.GetValue("NanoidAlphabet", DEFAULT_NANOID_ALPHABET)!;
+        string aliasTrial = Nanoid.Generate(size: nanoidSize, alphabet: nanoidAlphabet);
         var existingUrl = await _dbContext.LoadAsync<Url>(aliasTrial);
         if (existingUrl != null)
         {
@@ -30,11 +41,12 @@ public class AppController(
     public async Task<ActionResult<Url>> PostUrl(UrlDTO urlDTO)
     {
         try {
+            int customAliasLengthMin = _configurationSection.GetValue("CustomAliasLengthMin", CUSTOM_ALIAS_LENGTH_MIN);
             var hasCustomAlias = !string.IsNullOrEmpty(urlDTO.CustomAlias);
 
             if (hasCustomAlias)
             {
-                if (urlDTO.CustomAlias!.Length < 4)
+                if (urlDTO.CustomAlias!.Length < customAliasLengthMin)
                 {
                     return BadRequest(new {
                         status = 400,
@@ -55,8 +67,9 @@ public class AppController(
                 urlDTO.CustomAlias = await GenerateAlias();
             }
 
+            int urlExpireDateMaxBySeconds = _configurationSection.GetValue("UrlExpireDateMaxBySeconds", URL_EXPIRE_DATE_MAX_BY_SECONDS);
             var hasExpireDate = urlDTO.ExpireDate != null;
-            var expireDateMax = DateTimeOffset.Now.AddYears(5).ToUnixTimeMilliseconds();
+            var expireDateMax = DateTimeOffset.Now.AddSeconds(urlExpireDateMaxBySeconds).ToUnixTimeMilliseconds();
 
             if (hasExpireDate)
             {
@@ -77,7 +90,7 @@ public class AppController(
                     return BadRequest(
                         new {
                             status = 400,
-                            msg = "The expire date must be less than 5 years."
+                            msg = "The expire date is larger than the maximum allowed."
                         }
                     );
                 }

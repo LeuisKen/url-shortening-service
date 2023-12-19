@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 
 namespace UrlShortener.Tests.Controllers;
 
@@ -37,9 +38,13 @@ public class RedirectControllerTests
         requestMock.SetupGet(r => r.Host).Returns(new HostString("localhost"));
         httpContextMock.SetupGet(c => c.Request).Returns(requestMock.Object);
 
+        // Since all the configuration fields have default values, we can just create an empty configuration object.
+        var configuration = new ConfigurationBuilder().Build();
+
         var controller = new RedirectController(
             mockDbContext.Object,
             mockCache,
+            configuration,
             mockLogger.Object
         )
         {

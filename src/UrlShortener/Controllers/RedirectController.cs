@@ -11,12 +11,18 @@ namespace UrlShortener.Controllers;
 public class RedirectController(
     IDynamoDBContext dbContext,
     IDistributedCache cache,
+    IConfiguration configuration,
     ILogger<AppController> logger
 ) : ControllerBase
 {
 
+    // default values
+    private const string REDIRECT_CACHE_PREFIX = "redirect:";
+    private const int REDIRECT_CACHE_EXPIRES_BY_SECONDS = 259200;
+
     private readonly IDynamoDBContext _dbContext = dbContext;
     private readonly IDistributedCache _cache = cache;
+    private readonly IConfigurationSection _configurationSection = configuration.GetSection("AppConfig");
     private readonly ILogger<AppController> _logger = logger;
 
     [HttpGet("{alias}", Name = "Redirect")]
@@ -26,7 +32,11 @@ public class RedirectController(
             var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             Url? url = null;
-            var urlInCache = await _cache.GetStringAsync(alias);
+
+            string redirectCachePrefix = _configurationSection.GetValue("RedirectCachePrefix", REDIRECT_CACHE_PREFIX)!;
+            string cacheKey = redirectCachePrefix + alias;
+
+            var urlInCache = await _cache.GetStringAsync(cacheKey);
             if (urlInCache != null)
             {
                 url = JsonSerializer.Deserialize<Url>(urlInCache)!;
@@ -37,7 +47,16 @@ public class RedirectController(
                 {
                     return NotFound();
                 }
-                await _cache.SetStringAsync(alias, JsonSerializer.Serialize(url));
+                int redirectCacheExpiresBySeconds = _configurationSection.GetValue("RedirectCacheExpiresBySeconds", REDIRECT_CACHE_EXPIRES_BY_SECONDS);
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = new TimeSpan(0, 0, redirectCacheExpiresBySeconds)
+                };
+                await _cache.SetStringAsync(
+                    alias,
+                    JsonSerializer.Serialize(url),
+                    options
+                );
             }
             return url.ExpireDate < now
                 ? BadRequest(

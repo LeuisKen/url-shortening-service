@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
+using Castle.Core.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace UrlShortener.Tests.Controllers;
 
@@ -30,7 +32,10 @@ public class AppControllerTests
         requestMock.SetupGet(r => r.Host).Returns(new HostString("localhost"));
         httpContextMock.SetupGet(c => c.Request).Returns(requestMock.Object);
 
-        var controller = new AppController(mockDbContext.Object, mockLogger.Object)
+        // Since all the configuration fields have default values, we can just create an empty configuration object.
+        var configuration = new ConfigurationBuilder().Build();
+
+        var controller = new AppController(mockDbContext.Object, configuration, mockLogger.Object)
         {
             ControllerContext = new ControllerContext
             {
