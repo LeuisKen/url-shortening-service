@@ -8,7 +8,7 @@
             "name": "C#: UrlShortener Debug",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/UrlShortener/UrlShortener.csproj"
+            "projectPath": "${workspaceFolder}/src/UrlShortener/UrlShortener.csproj"
         }
     ]
 }

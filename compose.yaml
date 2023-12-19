@@ -6,3 +6,7 @@ services:
     volumes:
       - ./dynamodb:/data
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath /data"
+  redis:
+    image: redis:7.2.3
+    ports:
+      - "6379:6379"
