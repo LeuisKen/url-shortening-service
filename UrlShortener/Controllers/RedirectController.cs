@@ -16,10 +16,10 @@ public class RedirectController(
     private readonly ILogger<AppController> _logger = logger;
 
     [HttpGet("{alias}", Name = "Redirect")]
-    public IActionResult Get(string alias)
+    public async Task<IActionResult> Get(string alias)
     {
         try {
-            var url = _dbContext.LoadAsync<Url>(alias).Result;
+            var url = await _dbContext.LoadAsync<Url>(alias);
             if (url == null)
             {
                 return NotFound();
