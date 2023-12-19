@@ -76,7 +76,7 @@ Response:
 
 `404 Not Found`: The short link does not exist.
 
-`410 Gone`: The short link has expired.
+`400 Bad Request`: The short link has expired.
 
 ## Database Design
 
