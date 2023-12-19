@@ -16,7 +16,6 @@ namespace UrlShortener.Tests.Controllers;
 public class RedirectControllerTests
 {
     private readonly Mock<IDynamoDBContext> _mockDbContext;
-    private readonly IDistributedCache _mockCache;
     private readonly RedirectController _controller;
 
     public RedirectControllerTests()
@@ -51,7 +50,6 @@ public class RedirectControllerTests
         };
 
         _mockDbContext = mockDbContext;
-        _mockCache = mockCache;
         _controller = controller;
     }
 
