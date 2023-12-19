@@ -7,12 +7,16 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace UrlShortener.Tests.Controllers;
 
 public class RedirectControllerTests
 {
     private readonly Mock<IDynamoDBContext> _mockDbContext;
+    private readonly IDistributedCache _mockCache;
     private readonly RedirectController _controller;
 
     public RedirectControllerTests()
@@ -21,6 +25,10 @@ public class RedirectControllerTests
 
         // Mocking DynamoDBContext
         var mockDbContext = new Mock<IDynamoDBContext>();
+
+        // Mocking DistributedCache with MemoryDistributedCache
+        var opts = Options.Create(new MemoryDistributedCacheOptions());
+        var mockCache = new MemoryDistributedCache(opts);
         var mockLogger = new Mock<ILogger<AppController>>();
 
         // Mocking HttpContext
@@ -30,7 +38,11 @@ public class RedirectControllerTests
         requestMock.SetupGet(r => r.Host).Returns(new HostString("localhost"));
         httpContextMock.SetupGet(c => c.Request).Returns(requestMock.Object);
 
-        var controller = new RedirectController(mockDbContext.Object, mockLogger.Object)
+        var controller = new RedirectController(
+            mockDbContext.Object,
+            mockCache,
+            mockLogger.Object
+        )
         {
             ControllerContext = new ControllerContext
             {
@@ -39,6 +51,7 @@ public class RedirectControllerTests
         };
 
         _mockDbContext = mockDbContext;
+        _mockCache = mockCache;
         _controller = controller;
     }
 
