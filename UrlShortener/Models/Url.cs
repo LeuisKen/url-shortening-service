@@ -8,7 +8,7 @@ namespace UrlShortener.Models
         [DynamoDBHashKey("Alias")]
         public required string Alias { get; set; }
         public required string OriginalUrl { get; set; }
-        public required string CreateTime { get; set; }
-        public required string ExpireDate { get; set; }
+        public required long CreateTime { get; set; }
+        public required long ExpireDate { get; set; }
     }
 }

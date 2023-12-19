@@ -50,8 +50,8 @@ public class RedirectControllerTests
         {
             OriginalUrl = "http://example.com",
             Alias = "alias",
-            CreateTime = DateTime.Now.ToString(),
-            ExpireDate = DateTime.Now.AddYears(5).ToString()
+            CreateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            ExpireDate = DateTimeOffset.Now.AddYears(5).ToUnixTimeMilliseconds()
         };
         _mockDbContext.Setup(
             x => x.LoadAsync<Url>(url.Alias, It.IsAny<CancellationToken>())
@@ -78,5 +78,28 @@ public class RedirectControllerTests
 
         // Assert
         Assert.IsType<NotFoundResult>(result);
+    }
+
+    [Fact]
+    public async Task Get_WithExpiredAlias_ReturnsBadRequest()
+    {
+        // Arrange
+        var url = new Url
+        {
+            OriginalUrl = "http://example.com",
+            Alias = "alias",
+            CreateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            ExpireDate = DateTimeOffset.Now.AddYears(-1).ToUnixTimeMilliseconds()
+        };
+        _mockDbContext.Setup(
+            x => x.LoadAsync<Url>(url.Alias, It.IsAny<CancellationToken>())
+        ).ReturnsAsync(url);
+
+        // Act
+        var result = await _controller.Get(url.Alias);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        Assert.Equal(400, badRequestResult.StatusCode);
     }
 }

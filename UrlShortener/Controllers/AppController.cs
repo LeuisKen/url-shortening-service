@@ -34,6 +34,14 @@ public class AppController(
 
             if (hasCustomAlias)
             {
+                if (urlDTO.CustomAlias!.Length < 4)
+                {
+                    return BadRequest(new {
+                        status = 400,
+                        msg = "The custom alias must be at least 6 characters long."
+                    });
+                }
+
                 var existingUrl = await _dbContext.LoadAsync<Url>(urlDTO.CustomAlias);
                 if (existingUrl != null)
                 {
@@ -47,12 +55,14 @@ public class AppController(
                 urlDTO.CustomAlias = await GenerateAlias();
             }
 
-            var hasExpireDate = !string.IsNullOrEmpty(urlDTO.ExpireDate);
+            var hasExpireDate = urlDTO.ExpireDate != null;
+            var expireDateMax = DateTimeOffset.Now.AddYears(5).ToUnixTimeMilliseconds();
 
             if (hasExpireDate)
             {
-                var expireDate = DateTime.Parse(urlDTO.ExpireDate!);
-                if (expireDate < DateTime.Now)
+                var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                var expireDate = urlDTO.ExpireDate!.Value;
+                if (expireDate < now)
                 {
                     return BadRequest(
                         new {
@@ -61,17 +71,28 @@ public class AppController(
                         }
                     );
                 }
+
+                if (expireDate > expireDateMax)
+                {
+                    return BadRequest(
+                        new {
+                            status = 400,
+                            msg = "The expire date must be less than 5 years."
+                        }
+                    );
+                }
             }
             else {
-                urlDTO.ExpireDate = DateTime.Now.AddYears(5).ToString();
+                // using the max expire date as default
+                urlDTO.ExpireDate = expireDateMax;
             }
 
             var todoItem = new Url
             {
                 OriginalUrl = urlDTO.OriginalUrl,
                 Alias = urlDTO.CustomAlias!,
-                CreateTime = DateTime.Now.ToString(),
-                ExpireDate = urlDTO.ExpireDate!,
+                CreateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                ExpireDate = urlDTO.ExpireDate!.Value,
             };
 
             await _dbContext.SaveAsync(todoItem);

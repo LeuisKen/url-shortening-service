@@ -20,7 +20,19 @@ public class RedirectController(
     {
         try {
             var url = await _dbContext.LoadAsync<Url>(alias);
-            return url == null ? NotFound() : Redirect(url.OriginalUrl);
+            if (url == null)
+            {
+                return NotFound();
+            }
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            return url.ExpireDate < now
+                ? BadRequest(
+                    new {
+                        status = 400,
+                        msg = "The short link has expired."
+                    }
+                )
+                : Redirect(url.OriginalUrl);
         }
         catch (Exception ex)
         {

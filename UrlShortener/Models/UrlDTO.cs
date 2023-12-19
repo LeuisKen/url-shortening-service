@@ -4,6 +4,6 @@ namespace UrlShortener.Models
     {
         public required string OriginalUrl { get; set; }
         public string? CustomAlias { get; set; }
-        public string? ExpireDate { get; set; }
+        public long? ExpireDate { get; set; }
     }
 }

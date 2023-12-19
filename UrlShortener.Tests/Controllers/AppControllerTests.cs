@@ -69,7 +69,25 @@ public class AppControllerTests
         var urlDTO = new UrlDTO
         {
             OriginalUrl = "http://example.com",
-            ExpireDate = DateTime.Now.AddDays(-1).ToString()
+            ExpireDate = DateTimeOffset.Now.AddYears(-1).ToUnixTimeMilliseconds()
+        };
+
+        // Act
+        var result = await _controller.PostUrl(urlDTO);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Equal(400, badRequestResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostUrl_WithExpireDate_ReturnsBadRequestWhenExpireDateIsInTheFuture()
+    {
+        // Arrange
+        var urlDTO = new UrlDTO
+        {
+            OriginalUrl = "http://example.com",
+            ExpireDate = DateTimeOffset.Now.AddYears(6).ToUnixTimeMilliseconds()
         };
 
         // Act
@@ -95,9 +113,27 @@ public class AppControllerTests
         {
             Alias = urlDTO.CustomAlias,
             OriginalUrl = "http://example.com",
-            CreateTime = DateTime.Now.ToString(),
-            ExpireDate = DateTime.Now.AddYears(5).ToString()
+            CreateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            ExpireDate = DateTimeOffset.Now.AddYears(5).ToUnixTimeMilliseconds()
         });
+
+        // Act
+        var result = await _controller.PostUrl(urlDTO);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Equal(400, badRequestResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostUrl_WithCustomAlias_ReturnsBadRequestWhenAliasIsTooShort()
+    {
+        // Arrange
+        var urlDTO = new UrlDTO
+        {
+            OriginalUrl = "http://example.com",
+            CustomAlias = "abc"
+        };
 
         // Act
         var result = await _controller.PostUrl(urlDTO);
