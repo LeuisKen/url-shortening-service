@@ -8,17 +8,17 @@ namespace UrlShortener.Controllers;
 [ApiController]
 [Route("app/api", Name = "UrlShortenerManagement")]
 public class AppController(
-    IDynamoDBContext context,
+    IDynamoDBContext dbContext,
     ILogger<AppController> logger
 ) : ControllerBase
 {
-    private readonly IDynamoDBContext _context = context;
+    private readonly IDynamoDBContext _dbContext = dbContext;
     private readonly ILogger<AppController> _logger = logger;
 
     private async Task<string> GenerateAlias()
     {
         string aliasTrial = Nanoid.Generate(size: 6, alphabet: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-        var existingUrl = await _context.LoadAsync<Url>(aliasTrial);
+        var existingUrl = await _dbContext.LoadAsync<Url>(aliasTrial);
         if (existingUrl != null)
         {
             return await GenerateAlias();
@@ -34,7 +34,7 @@ public class AppController(
 
             if (hasCustomAlias)
             {
-                var existingUrl = await _context.LoadAsync<Url>(urlDTO.CustomAlias);
+                var existingUrl = await _dbContext.LoadAsync<Url>(urlDTO.CustomAlias);
                 if (existingUrl != null)
                 {
                     return BadRequest(new {
@@ -74,7 +74,7 @@ public class AppController(
                 ExpireDate = urlDTO.ExpireDate!,
             };
 
-            await _context.SaveAsync(todoItem);
+            await _dbContext.SaveAsync(todoItem);
 
             return Ok(new {
                 status = 0,
