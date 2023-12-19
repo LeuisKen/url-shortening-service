@@ -485,3 +485,4 @@ $RECYCLE.BIN/
 
 # application specific files
 dynamodb
+docker-compose.override.yaml
