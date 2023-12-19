@@ -38,7 +38,7 @@ public class AppController(
                 {
                     return BadRequest(new {
                         status = 400,
-                        msg = "The custom alias must be at least 6 characters long."
+                        msg = "The custom alias must be at least 4 characters long."
                     });
                 }
 
