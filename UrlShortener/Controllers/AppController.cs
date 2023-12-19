@@ -87,7 +87,8 @@ public class AppController(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error when creating short link");
-            return BadRequest(new {
+            return StatusCode(500, new
+            {
                 status = 500,
                 msg = "Please contact the administrator for help."
             });
