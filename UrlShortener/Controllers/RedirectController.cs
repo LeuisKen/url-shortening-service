@@ -20,11 +20,7 @@ public class RedirectController(
     {
         try {
             var url = await _dbContext.LoadAsync<Url>(alias);
-            if (url == null)
-            {
-                return NotFound();
-            }
-            return Redirect(url.OriginalUrl);
+            return url == null ? NotFound() : Redirect(url.OriginalUrl);
         }
         catch (Exception ex)
         {
