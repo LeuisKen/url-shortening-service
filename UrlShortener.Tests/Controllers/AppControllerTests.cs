@@ -62,4 +62,49 @@ public class AppControllerTests
         Assert.Equal(200, okResult.StatusCode);
     }
 
+    [Fact]
+    public async Task PostUrl_WithExpireDate_ReturnsBadRequestWhenExpireDateIsInThePast()
+    {
+        // Arrange
+        var urlDTO = new UrlDTO
+        {
+            OriginalUrl = "http://example.com",
+            ExpireDate = DateTime.Now.AddDays(-1).ToString()
+        };
+
+        // Act
+        var result = await _controller.PostUrl(urlDTO);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Equal(400, badRequestResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostUrl_WithCustomAlias_ReturnsBadRequestWhenAliasExists()
+    {
+        // Arrange
+        var urlDTO = new UrlDTO
+        {
+            OriginalUrl = "http://example.com",
+            CustomAlias = "customAlias"
+        };
+        _mockDbContext.Setup(
+            x => x.LoadAsync<Url>(urlDTO.CustomAlias, It.IsAny<CancellationToken>())
+        ).ReturnsAsync(new Url
+        {
+            Alias = urlDTO.CustomAlias,
+            OriginalUrl = "http://example.com",
+            CreateTime = DateTime.Now.ToString(),
+            ExpireDate = DateTime.Now.AddYears(5).ToString()
+        });
+
+        // Act
+        var result = await _controller.PostUrl(urlDTO);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Equal(400, badRequestResult.StatusCode);
+    }
+
 }
