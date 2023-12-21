@@ -1,9 +1,7 @@
-using Xunit;
 using Moq;
 using UrlShortener.Controllers;
 using UrlShortener.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
