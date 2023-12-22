@@ -29,6 +29,7 @@ public class AppController(
     {
         try {
             int customAliasLengthMin = _configurationSection.GetValue("CustomAliasLengthMin", CUSTOM_ALIAS_LENGTH_MIN);
+            int customAliasLengthMax = _configurationSection.GetValue("CustomAliasLengthMax", CUSTOM_ALIAS_LENGTH_MIN);
             var hasCustomAlias = !string.IsNullOrEmpty(urlDTO.CustomAlias);
 
             if (hasCustomAlias)
@@ -38,6 +39,14 @@ public class AppController(
                     return BadRequest(new {
                         status = 400,
                         msg = $"The custom alias must be at least {customAliasLengthMin} characters long."
+                    });
+                }
+
+                if (urlDTO.CustomAlias!.Length > customAliasLengthMax)
+                {
+                    return BadRequest(new {
+                        status = 400,
+                        msg = $"The custom alias must be at most {customAliasLengthMax} characters long."
                     });
                 }
 
