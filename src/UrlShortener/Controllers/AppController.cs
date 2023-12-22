@@ -1,13 +1,14 @@
 using Amazon.DynamoDBv2.DataModel;
 using Microsoft.AspNetCore.Mvc;
-using NanoidDotNet;
 using UrlShortener.Models;
+using UrlShortener.Services;
 
 namespace UrlShortener.Controllers;
 
 [ApiController]
 [Route("app/api", Name = "UrlShortenerManagement")]
 public class AppController(
+    IAliasGenerationService aliasGenerationService,
     IDynamoDBContext dbContext,
     IConfiguration configuration,
     ILogger<AppController> logger
@@ -15,27 +16,13 @@ public class AppController(
 {
 
     // default values
-    private const int DEFAULT_NANOID_SIZE = 6;
-    private const string DEFAULT_NANOID_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv";
     private const int CUSTOM_ALIAS_LENGTH_MIN = 4;
     private const int URL_EXPIRE_DATE_MAX_BY_SECONDS = 157680000;
 
+    private readonly IAliasGenerationService _aliasGenerationService = aliasGenerationService;
     private readonly IDynamoDBContext _dbContext = dbContext;
     private readonly IConfigurationSection _configurationSection = configuration.GetSection("AppConfig");
     private readonly ILogger<AppController> _logger = logger;
-
-    private async Task<string> GenerateAlias()
-    {
-        int nanoidSize = _configurationSection.GetValue("NanoidSize", DEFAULT_NANOID_SIZE);
-        string nanoidAlphabet = _configurationSection.GetValue("NanoidAlphabet", DEFAULT_NANOID_ALPHABET)!;
-        string aliasTrial = Nanoid.Generate(size: nanoidSize, alphabet: nanoidAlphabet);
-        var existingUrl = await _dbContext.LoadAsync<Url>(aliasTrial);
-        if (existingUrl != null)
-        {
-            return await GenerateAlias();
-        }
-        return aliasTrial;
-    }
 
     [HttpPost("createUrl", Name = "CreateUrl")]
     public async Task<ActionResult<Url>> PostUrl(UrlDTO urlDTO)
@@ -64,7 +51,7 @@ public class AppController(
                 }
             }
             else {
-                urlDTO.CustomAlias = await GenerateAlias();
+                urlDTO.CustomAlias = await _aliasGenerationService.GenerateAlias();
             }
 
             int urlExpireDateMaxBySeconds = _configurationSection.GetValue("UrlExpireDateMaxBySeconds", URL_EXPIRE_DATE_MAX_BY_SECONDS);

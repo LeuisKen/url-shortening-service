@@ -6,6 +6,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using UrlShortener.Services;
 
 namespace UrlShortener.Tests.Controllers;
 
@@ -32,7 +33,9 @@ public class AppControllerTests
         // Since all the configuration fields have default values, we can just create an empty configuration object.
         var configuration = new ConfigurationBuilder().Build();
 
-        var controller = new AppController(mockDbContext.Object, configuration, mockLogger.Object)
+        var aliasGenerationService = new AliasGenerationService(mockDbContext.Object, configuration);
+
+        var controller = new AppController(aliasGenerationService, mockDbContext.Object, configuration, mockLogger.Object)
         {
             ControllerContext = new ControllerContext
             {

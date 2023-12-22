@@ -1,6 +1,8 @@
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 
+using UrlShortener.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -40,6 +42,8 @@ else
 {
     builder.Services.AddAWSService<IAmazonDynamoDB>();
 }
+
+builder.Services.AddScoped<IAliasGenerationService, AliasGenerationService>();
 
 var app = builder.Build();
 
